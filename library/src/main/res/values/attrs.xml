@@ -45,6 +45,7 @@
         <attr name="futureWeekendBackgroundColor" format="color"/>
         <attr name="pastWeekendBackgroundColor" format="color"/>
         <attr name="showNowLine" format="boolean"/>
+        <attr name="alwaysDrawEventTitle" format="boolean"/>
         <attr name="nowLineColor" format="color"/>
         <attr name="nowLineThickness" format="dimension"/>
         <attr name="horizontalFlingEnabled" format="boolean"/>
