@@ -296,6 +296,11 @@ public class WeekView extends View {
         }
     };
 
+
+    public List<EventRect> getEvents() {
+        return mEventRects;
+    }
+
     public WeekView(Context context) {
         this(context, null);
     }
@@ -924,7 +929,7 @@ public class WeekView extends View {
      * stored in "originalEvent". But the event that corresponds to rectangle the rectangle
      * instance will be stored in "event".
      */
-    private class EventRect {
+    protected class EventRect {
         public WeekViewEvent event;
         public WeekViewEvent originalEvent;
         public RectF rectF;
