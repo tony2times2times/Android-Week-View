@@ -139,6 +139,7 @@ public class WeekView extends View {
     private int mEventCornerRadius = 0;
     private boolean mShowDistinctWeekendColor = false;
     private boolean mShowNowLine = false;
+    private boolean mAlwaysDrawEventTitle;
     private boolean mShowDistinctPastFutureColor = false;
     private boolean mHorizontalFlingEnabled = true;
     private boolean mVerticalFlingEnabled = true;
@@ -354,6 +355,7 @@ public class WeekView extends View {
             mShowDistinctPastFutureColor = a.getBoolean(R.styleable.WeekView_showDistinctPastFutureColor, mShowDistinctPastFutureColor);
             mShowDistinctWeekendColor = a.getBoolean(R.styleable.WeekView_showDistinctWeekendColor, mShowDistinctWeekendColor);
             mShowNowLine = a.getBoolean(R.styleable.WeekView_showNowLine, mShowNowLine);
+            mAlwaysDrawEventTitle = a.getBoolean(R.styleable.WeekView_alwaysDrawEventTitle, mAlwaysDrawEventTitle);
             mHorizontalFlingEnabled = a.getBoolean(R.styleable.WeekView_horizontalFlingEnabled, mHorizontalFlingEnabled);
             mVerticalFlingEnabled = a.getBoolean(R.styleable.WeekView_verticalFlingEnabled, mVerticalFlingEnabled);
             mAllDayEventHeight = a.getDimensionPixelSize(R.styleable.WeekView_allDayEventHeight, mAllDayEventHeight);
@@ -777,6 +779,25 @@ public class WeekView extends View {
     }
 
     /**
+     * Report the minimum height needed for the event name to be visible
+     * @param eventName event name
+     * @param rect rectangle
+     * @param originalLeft original left
+     * @return minimum  height needed for the event name to be visible
+     */
+    private int calculateMinEventRectHeightForEvent(String eventName,RectF rect,float originalLeft) {
+        if (! mAlwaysDrawEventTitle) {
+            return 0;
+        }
+
+        int availableWidth = (int) (rect.right - originalLeft - mEventPadding * 2);
+        SpannableStringBuilder bob = getSpannableStringBuilderForEventName(eventName);
+        StaticLayout textLayout = new StaticLayout(bob, mEventTextPaint, availableWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+        final int lineHeight = textLayout.getHeight() / textLayout.getLineCount(); // Width needed for a single line
+        return lineHeight + mEventPadding * 2; // Add padding
+    }
+
+    /**
      * Draw all the events of a particular day.
      * @param date The day.
      * @param startFromPixel The left position of the day area. The events will never go any left from this value.
@@ -811,6 +832,13 @@ public class WeekView extends View {
                             ) {
                         mEventRects.get(i).rectF = new RectF(left, top, right, bottom);
                         mEventBackgroundPaint.setColor(mEventRects.get(i).event.getColor() == 0 ? mDefaultEventColor : mEventRects.get(i).event.getColor());
+                        final int minHeight = calculateMinEventRectHeightForEvent(mEventRects.get(i).event.getName(),mEventRects.get(i).rectF,left);
+                        final float height = bottom - top;
+                        if (height < minHeight) {
+                            // Enforce there is at least enough room for the event name
+                            bottom = top + minHeight;
+                            mEventRects.get(i).rectF = new RectF(left, top, right, bottom);
+                        }
                         canvas.drawRoundRect(mEventRects.get(i).rectF, mEventCornerRadius, mEventCornerRadius, mEventBackgroundPaint);
                         drawEventTitle(mEventRects.get(i).event, mEventRects.get(i).rectF, canvas, top, left);
                     }
@@ -879,12 +907,7 @@ public class WeekView extends View {
         if (rect.bottom - rect.top - mEventPadding * 2 < 0) return;
 
         // Prepare the name of the event.
-        SpannableStringBuilder bob = new SpannableStringBuilder();
-        if (event.getName() != null) {
-            bob.append(event.getName());
-            bob.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, bob.length(), 0);
-            bob.append(' ');
-        }
+        SpannableStringBuilder bob = getSpannableStringBuilderForEventName(event.getName());
 
         // Prepare the location of the event.
         if (event.getLocation() != null) {
@@ -918,6 +941,20 @@ public class WeekView extends View {
             textLayout.draw(canvas);
             canvas.restore();
         }
+    }
+
+    /**
+     * @param eventName event name
+     * @return a spannable builder for the event name
+     */
+    private SpannableStringBuilder getSpannableStringBuilderForEventName(String eventName) {
+        SpannableStringBuilder bob = new SpannableStringBuilder();
+        if (eventName != null) {
+            bob.append(eventName);
+            bob.setSpan(new StyleSpan(Typeface.BOLD), 0, bob.length(), 0);
+            bob.append(' ');
+        }
+        return bob;
     }
 
 
