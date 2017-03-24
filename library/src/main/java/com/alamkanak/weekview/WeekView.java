@@ -903,6 +903,10 @@ public class WeekView extends View {
      * @param originalLeft The original left position of the rectangle. The rectangle may have some of its portion outside of the visible area.
      */
     private void drawEventTitle(WeekViewEvent event, RectF rect, Canvas canvas, float originalTop, float originalLeft) {
+
+        // Don't draw event names for background events
+        if (event.isBackground()) return;
+
         if (rect.right - rect.left - mEventPadding * 2 < 0) return;
         if (rect.bottom - rect.top - mEventPadding * 2 < 0) return;
 
@@ -1097,7 +1101,9 @@ public class WeekView extends View {
             return;
         List<WeekViewEvent> splitedEvents = event.splitWeekViewEvents();
         for(WeekViewEvent splitedEvent: splitedEvents){
-            mEventRects.add(new EventRect(splitedEvent, event, null));
+            // Background events are drawn first
+            int position = splitedEvent.isBackground() ? 0 : mEventRects.size();
+            mEventRects.add(position,new EventRect(splitedEvent, event, null));
         }
     }
 
@@ -1219,7 +1225,10 @@ public class WeekView extends View {
                         eventRect.top = 0;
                         eventRect.bottom = mAllDayEventHeight;
                     }
-                    mEventRects.add(eventRect);
+
+                    // Background events are drawn first
+                    int position = eventRect.event.isBackground() ? 0 : mEventRects.size();
+                    mEventRects.add(position,eventRect);
                 }
                 j++;
             }
@@ -1234,6 +1243,9 @@ public class WeekView extends View {
      * @return true if the events overlap.
      */
     private boolean isEventsCollide(WeekViewEvent event1, WeekViewEvent event2) {
+        // Background events are drawn under other events, not side-by-side. So they never 'collide'
+        // with other events.
+        if (event1.isBackground() || event2.isBackground()) return false;
         long start1 = event1.getStartTime().getTimeInMillis();
         long end1 = event1.getEndTime().getTimeInMillis();
         long start2 = event2.getStartTime().getTimeInMillis();
