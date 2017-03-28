@@ -251,6 +251,8 @@ public class WeekView extends View {
                 Collections.reverse(reversedEventRects);
                 for (EventRect event : reversedEventRects) {
                     if (event.rectF != null && e.getX() > event.rectF.left && e.getX() < event.rectF.right && e.getY() > event.rectF.top && e.getY() < event.rectF.bottom) {
+                        // Background events are not clickable
+                        if (event.event.isBackground()) continue;
                         mEventClickListener.onEventClick(event.originalEvent, event.rectF);
                         playSoundEffect(SoundEffectConstants.CLICK);
                         return super.onSingleTapConfirmed(e);
@@ -1101,9 +1103,7 @@ public class WeekView extends View {
             return;
         List<WeekViewEvent> splitedEvents = event.splitWeekViewEvents();
         for(WeekViewEvent splitedEvent: splitedEvents){
-            // Background events are drawn first
-            int position = splitedEvent.isBackground() ? 0 : mEventRects.size();
-            mEventRects.add(position,new EventRect(splitedEvent, event, null));
+            mEventRects.add(new EventRect(splitedEvent, event, null));
         }
     }
 
@@ -1225,10 +1225,7 @@ public class WeekView extends View {
                         eventRect.top = 0;
                         eventRect.bottom = mAllDayEventHeight;
                     }
-
-                    // Background events are drawn first
-                    int position = eventRect.event.isBackground() ? 0 : mEventRects.size();
-                    mEventRects.add(position,eventRect);
+                    mEventRects.add(eventRect);
                 }
                 j++;
             }
