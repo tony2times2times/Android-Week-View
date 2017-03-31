@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -1052,6 +1053,7 @@ public class WeekView extends View {
                 if (nextPeriodEvents == null)
                     nextPeriodEvents = mWeekViewLoader.onLoad(periodToFetch+1);
 
+                deduplicateEvents(previousPeriodEvents,currentPeriodEvents,nextPeriodEvents);
 
                 // Clear events.
                 mEventRects.clear();
@@ -1091,6 +1093,21 @@ public class WeekView extends View {
                 }
             }
             computePositionOfEvents(eventRects);
+        }
+    }
+
+    private void deduplicateEvents(List<? extends WeekViewEvent> previousPeriodEvents, List<? extends WeekViewEvent> currentPeriodEvents, List<? extends WeekViewEvent> nextPeriodEvents) {
+        for (Iterator<? extends WeekViewEvent> it = nextPeriodEvents.iterator(); it.hasNext();) {
+            WeekViewEvent weekViewEvent = it.next();
+            if (currentPeriodEvents.contains(weekViewEvent)) {
+                it.remove();
+            }
+        }
+        for (Iterator<? extends WeekViewEvent> it = currentPeriodEvents.iterator(); it.hasNext();) {
+            WeekViewEvent weekViewEvent = it.next();
+            if (previousPeriodEvents.contains(weekViewEvent)) {
+                it.remove();
+            }
         }
     }
 
